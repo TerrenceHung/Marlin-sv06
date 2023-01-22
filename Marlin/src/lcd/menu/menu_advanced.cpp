@@ -57,6 +57,10 @@
   #include "../../feature/password/password.h"
 #endif
 
+#if ENABLED(X_AXIS_TWIST_COMPENSATION)
+#include "../../feature/x_twist.h"
+#endif 
+
 void menu_tmc();
 void menu_backlash();
 
@@ -625,6 +629,8 @@ void menu_backlash();
 
       #if ENABLED(X_AXIS_TWIST_COMPENSATION)
         SUBMENU(MSG_XATC, xatc_wizard_continue);
+        //ACTION_ITEM(MSG_XATC_RESET, xatc.reset);
+        ACTION_ITEM(MSG_XATC_RESET, []{ queue.inject(F("M423 R")); ui.return_to_status(); ui.set_status(GET_TEXT_F(MSG_XATC_DISABLED),0); });
       #endif
 
       END_MENU();

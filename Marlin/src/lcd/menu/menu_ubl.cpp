@@ -49,7 +49,7 @@ static uint8_t n_edit_pts = 1;
 static int8_t x_plot = 0, y_plot = 0; // May be negative during move
 
 #if HAS_HEATED_BED
-  static int16_t custom_bed_temp = 50;
+  static int16_t custom_bed_temp = 60;
 #endif
 
 float mesh_edit_accumulator;  // Rounded to 2.5 decimal places on use
@@ -572,7 +572,17 @@ void _menu_ubl_tools() {
     ACTION_ITEM(MSG_UBL_7_SAVE_MESH, _lcd_ubl_save_mesh_cmd);
     END_MENU();
   }
-
+#else
+  void _lcd_ubl_step_by_step() {
+    START_MENU();
+    BACK_ITEM(MSG_UBL_LEVEL_BED);
+    GCODES_ITEM(MSG_UBL_1_BUILD_COLD_MESH, F("G29NP1"));
+    GCODES_ITEM(MSG_UBL_2_SMART_FILLIN, F("G29P3T0"));
+    GCODES_ITEM(MSG_UBL_4_FINE_TUNE_ALL, F("G29P4RT"));
+    GCODES_ITEM(MSG_UBL_6_FINE_TUNE_ALL, F("G29P4RT"));
+    ACTION_ITEM(MSG_UBL_7_SAVE_MESH, _lcd_ubl_save_mesh_cmd);
+    END_MENU();
+  }
 #endif
 
 #if ENABLED(UBL_MESH_WIZARD)
@@ -644,9 +654,9 @@ void _lcd_ubl_level_bed() {
     editable.decimal = planner.z_fade_height;
     EDIT_ITEM_FAST(float3, MSG_Z_FADE_HEIGHT, &editable.decimal, 0, 100, []{ set_z_fade_height(editable.decimal); });
   #endif
-  #if ENABLED(G26_MESH_VALIDATION)
+  //#if ENABLED(G26_MESH_VALIDATION)
     SUBMENU(MSG_UBL_STEP_BY_STEP_MENU, _lcd_ubl_step_by_step);
-  #endif
+  //#endif
   #if ENABLED(UBL_MESH_WIZARD)
     SUBMENU(MSG_UBL_MESH_WIZARD, _menu_ubl_mesh_wizard);
   #endif
