@@ -924,6 +924,10 @@ class Temperature {
       static void lcd_preheat(const uint8_t e, const int8_t indh, const int8_t indb);
     #endif
 
+    #if HAS_LCD_MENU && HAS_TEMPERATURE
+      static void lcd_preheat_hot(const uint8_t j, const int8_t i, const int8_t k);
+    #endif
+
   private:
 
     // Reading raw temperatures and converting to Celsius when ready

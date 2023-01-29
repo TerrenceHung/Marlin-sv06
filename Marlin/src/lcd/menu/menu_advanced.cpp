@@ -602,7 +602,7 @@ void menu_advanced_settings() {
   #endif
 
   #if SHOW_MENU_ADVANCED_TEMPERATURE
-    SUBMENU(MSG_TEMPERATURE, menu_advanced_temperature);
+    SUBMENU(MSD_PID_SETTING, menu_advanced_temperature);
   #endif
 
   #if DISABLED(NO_VOLUMETRICS) || ENABLED(ADVANCED_PAUSE_FEATURE)
@@ -636,6 +636,10 @@ void menu_advanced_settings() {
 
   #if ENABLED(PASSWORD_FEATURE)
     SUBMENU(MSG_PASSWORD_SETTINGS, password.access_menu_password);
+  #endif
+
+  #if ENABLED(EEPROM_SETTINGS)
+    ACTION_ITEM(MSG_STORE_EEPROM, ui.store_settings);
   #endif
 
   #if ENABLED(EEPROM_SETTINGS) && DISABLED(SLIM_LCD_MENUS)

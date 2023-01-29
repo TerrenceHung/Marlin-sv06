@@ -428,6 +428,8 @@ bool pause_print(const_float_t retract, const xyz_pos_t &park_point, const bool 
   #if ENABLED(POWER_LOSS_RECOVERY)
     // Save PLR info in case the power goes out while parked
     const float park_raise = do_park ? nozzle.park_mode_0_height(park_point.z) - current_position.z : POWER_LOSS_ZRAISE;
+    recovery.DegTargetHotend = thermalManager.degTargetHotend(0);
+    recovery.DegTargetBed = thermalManager.degTargetBed();
     if (was_sd_printing && recovery.enabled) recovery.save(true, park_raise, do_park);
   #endif
 
@@ -681,6 +683,8 @@ void resume_print(const_float_t slow_load_length/*=0*/, const_float_t fast_load_
       --did_pause_print;
       card.startOrResumeFilePrinting();
       // Write PLR now to update the z axis value
+      recovery.DegTargetHotend = thermalManager.degTargetHotend(0);
+      recovery.DegTargetBed = thermalManager.degTargetBed();
       TERN_(POWER_LOSS_RECOVERY, if (recovery.enabled) recovery.save(true));
     }
   #endif

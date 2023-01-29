@@ -1414,7 +1414,7 @@ constexpr uint8_t epps = ENCODER_PULSES_PER_STEP;
     #endif
 
     else if (!no_welcome)
-      msg = GET_TEXT(WELCOME_MSG);
+     msg = GET_TEXT(WELCOME_MSG);
     else
       return;
 

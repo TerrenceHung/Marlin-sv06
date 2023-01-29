@@ -105,8 +105,9 @@ void menu_info_thermistors() {
     #include "../thermistornames.h"
     STATIC_ITEM_P(PSTR(LCD_STR_E0 ": " THERMISTOR_NAME), SS_INVERT);
     PSTRING_ITEM(MSG_INFO_MIN_TEMP, STRINGIFY(HEATER_0_MINTEMP), SS_LEFT);
-    PSTRING_ITEM(MSG_INFO_MAX_TEMP, STRINGIFY(HEATER_0_MAXTEMP), SS_LEFT);
-    STATIC_ITEM(TERN(WATCH_HOTENDS, MSG_INFO_RUNAWAY_ON, MSG_INFO_RUNAWAY_OFF), SS_LEFT);
+    PSTRING_ITEM(MSG_INFO_MAX_TEMP, STRINGIFY(300), SS_LEFT);
+    //STATIC_ITEM(TERN(WATCH_HOTENDS, MSG_INFO_RUNAWAY_ON, MSG_INFO_RUNAWAY_OFF), SS_LEFT);
+    //PSTRING_ITEM(MSG_INFO_BAUDRATE, STRINGIFY(BAUDRATE), SS_CENTER); // Baud: 250000
   #endif
 
   #if TEMP_SENSOR_1 != 0
@@ -185,7 +186,7 @@ void menu_info_thermistors() {
     #include "../thermistornames.h"
     STATIC_ITEM_P(PSTR("BED: " THERMISTOR_NAME), SS_INVERT);
     PSTRING_ITEM(MSG_INFO_MIN_TEMP, STRINGIFY(BED_MINTEMP), SS_LEFT);
-    PSTRING_ITEM(MSG_INFO_MAX_TEMP, STRINGIFY(BED_MAXTEMP), SS_LEFT);
+    PSTRING_ITEM(MSG_INFO_MAX_TEMP, STRINGIFY(100), SS_LEFT);
     STATIC_ITEM(TERN(WATCH_BED, MSG_INFO_RUNAWAY_ON, MSG_INFO_RUNAWAY_OFF), SS_LEFT);
   #endif
 
@@ -219,13 +220,13 @@ void menu_info_board() {
   if (ui.use_click()) return ui.go_back();
 
   START_SCREEN();
-  STATIC_ITEM_P(PSTR(BOARD_INFO_NAME), SS_DEFAULT|SS_INVERT);      // MyPrinterController
+  //STATIC_ITEM_P(PSTR(BOARD_INFO_NAME), SS_DEFAULT|SS_INVERT);      // MyPrinterController
   #ifdef BOARD_WEBSITE_URL
     STATIC_ITEM_P(PSTR(BOARD_WEBSITE_URL), SS_LEFT);               // www.my3dprinter.com
   #endif
   PSTRING_ITEM(MSG_INFO_BAUDRATE, STRINGIFY(BAUDRATE), SS_CENTER); // Baud: 250000
   PSTRING_ITEM(MSG_INFO_PROTOCOL, PROTOCOL_VERSION, SS_CENTER);    // Protocol: 1.0
-  PSTRING_ITEM(MSG_INFO_PSU, PSU_NAME, SS_CENTER);
+  //PSTRING_ITEM(MSG_INFO_PSU, PSU_NAME, SS_CENTER);
   END_SCREEN();
 }
 
@@ -251,21 +252,25 @@ void menu_info_board() {
   void menu_info_printer() {
     if (ui.use_click()) return ui.go_back();
     START_SCREEN();
-    STATIC_ITEM(MSG_MARLIN, SS_DEFAULT|SS_INVERT);              // Marlin
-    STATIC_ITEM_P(PSTR(SHORT_BUILD_VERSION));                   // x.x.x-Branch
-    STATIC_ITEM_P(PSTR(STRING_DISTRIBUTION_DATE));              // YYYY-MM-DD HH:MM
     STATIC_ITEM_P(PSTR(MACHINE_NAME), SS_DEFAULT|SS_INVERT);    // My3DPrinter
     STATIC_ITEM_P(PSTR(WEBSITE_URL));                           // www.my3dprinter.com
-    PSTRING_ITEM(MSG_INFO_EXTRUDERS, STRINGIFY(EXTRUDERS), SS_CENTER); // Extruders: 2
-    #if HAS_LEVELING
-      STATIC_ITEM(
-        TERN_(AUTO_BED_LEVELING_3POINT, MSG_3POINT_LEVELING)      // 3-Point Leveling
-        TERN_(AUTO_BED_LEVELING_LINEAR, MSG_LINEAR_LEVELING)      // Linear Leveling
-        TERN_(AUTO_BED_LEVELING_BILINEAR, MSG_BILINEAR_LEVELING)  // Bi-linear Leveling
-        TERN_(AUTO_BED_LEVELING_UBL, MSG_UBL_LEVELING)            // Unified Bed Leveling
-        TERN_(MESH_BED_LEVELING, MSG_MESH_LEVELING)               // Mesh Leveling
-      );
-    #endif
+    STATIC_ITEM_P(PSTR(FIRMWARE_VERSION));                      // firmware version
+    //STATIC_ITEM(MSG_MARLIN, SS_DEFAULT|SS_INVERT);              // Marlin
+    //STATIC_ITEM_P(PSTR(SHORT_BUILD_VERSION));                   // x.x.x-Branch
+    
+    //STATIC_ITEM_P(PSTR(STRING_DISTRIBUTION_DATE));              // YYYY-MM-DD HH:MM
+    PSTRING_ITEM(MSG_INFO_BAUDRATE, STRINGIFY(BAUDRATE), SS_CENTER); // Baud: 250000
+    
+    //PSTRING_ITEM(MSG_INFO_EXTRUDERS, STRINGIFY(EXTRUDERS), SS_CENTER); // Extruders: 2
+    // #if HAS_LEVELING
+    //   STATIC_ITEM(
+    //     TERN_(AUTO_BED_LEVELING_3POINT, MSG_3POINT_LEVELING)      // 3-Point Leveling
+    //     TERN_(AUTO_BED_LEVELING_LINEAR, MSG_LINEAR_LEVELING)      // Linear Leveling
+    //     TERN_(AUTO_BED_LEVELING_BILINEAR, MSG_BILINEAR_LEVELING)  // Bi-linear Leveling
+    //     TERN_(AUTO_BED_LEVELING_UBL, MSG_UBL_LEVELING)            // Unified Bed Leveling
+    //     TERN_(MESH_BED_LEVELING, MSG_MESH_LEVELING)               // Mesh Leveling
+    //   );
+    // #endif
     END_SCREEN();
   }
 
@@ -281,7 +286,7 @@ void menu_info() {
     SUBMENU(MSG_INFO_PRINTER_MENU, TERN(SHOW_CUSTOM_BOOTSCREEN, menu_show_custom_bootscreen, menu_show_marlin_bootscreen));
   #else
     SUBMENU(MSG_INFO_PRINTER_MENU, menu_info_printer);           // Printer Info >
-    SUBMENU(MSG_INFO_BOARD_MENU, menu_info_board);               // Board Info >
+    //SUBMENU(MSG_INFO_BOARD_MENU, menu_info_board);               // Board Info >
     #if HAS_EXTRUDERS
       SUBMENU(MSG_INFO_THERMISTOR_MENU, menu_info_thermistors);  // Thermistors >
     #endif

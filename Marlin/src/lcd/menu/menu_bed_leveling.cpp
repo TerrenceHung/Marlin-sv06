@@ -31,6 +31,7 @@
 #include "menu_item.h"
 #include "../../module/planner.h"
 #include "../../feature/bedlevel/bedlevel.h"
+#include "../../module/probe.h"
 
 #if HAS_BED_PROBE && DISABLED(BABYSTEP_ZPROBE_OFFSET)
   #include "../../module/probe.h"
@@ -221,6 +222,53 @@
   }
 
 #endif // MESH_EDIT_MENU
+void do_level_hint(){
+   queue.inject_P(all_axes_trusted() ? PSTR("G29") : PSTR("G29N")); 
+   ui.return_to_status();
+   LCD_MESSAGEPGM(MSG_LEVEL_STATE);
+}
+void lcd_G29() {
+  const celsius_t hotendPreheat = (LEVELING_NOZZLE_TEMP-2) > thermalManager.degTargetHotend(0) ? LEVELING_NOZZLE_TEMP : 0;
+  const celsius_t bedPreheat = (LEVELING_BED_TEMP-2) > thermalManager.degTargetBed() ? LEVELING_BED_TEMP : 0;
+  if (hotendPreheat || bedPreheat) {
+    ui.goto_screen([]{
+      MenuItem_confirm::select_screen(
+          GET_TEXT(MSG_BACK),GET_TEXT(MSG_BUTTON_PROCEED), 
+          ui.goto_previous_screen, do_level_hint, 
+        GET_TEXT(MSG_LEVEL_HINT), (const char *)nullptr, PSTR("!")
+      );
+    });
+  }
+  else{
+    queue.inject_P(all_axes_trusted() ? PSTR("G29") : PSTR("G29N")); 
+    ui.return_to_status();
+  }
+}
+
+void do_home_hint(){
+  thermalManager.setTargetHotend(LEVELING_NOZZLE_TEMP, 0);
+  thermalManager.setTargetBed(LEVELING_BED_TEMP);
+  ui.return_to_status();
+}
+void lcd_G28(){
+  const celsius_t hotendPreheat = (LEVELING_NOZZLE_TEMP-2) > thermalManager.temp_hotend[0].celsius ? LEVELING_NOZZLE_TEMP : 0;
+  const celsius_t bedPreheat = (LEVELING_BED_TEMP-2) > thermalManager.temp_bed.celsius ? LEVELING_BED_TEMP : 0;
+  if (hotendPreheat || bedPreheat) {
+        ui.goto_screen([]{
+        MenuItem_confirm::select_screen(
+        GET_TEXT(MSG_BACK),GET_TEXT(MSG_BUTTON_PROCEED), 
+        ui.goto_previous_screen, do_home_hint, 
+        GET_TEXT(MSG_HOME_HINT), (const char *)nullptr, PSTR("!")
+      );
+    });
+  }
+  else {
+    thermalManager.setTargetHotend(LEVELING_NOZZLE_TEMP, 0);
+    thermalManager.setTargetBed(LEVELING_BED_TEMP);
+    queue.inject_P(PSTR("G28\nG1 F240 Z0")); 
+    ui.return_to_status();
+  }
+}
 
 /**
  * Step 1: Bed Level entry-point
@@ -237,41 +285,36 @@
  *    Save Settings       (Req: EEPROM_SETTINGS)
  */
 void menu_bed_leveling() {
-  const bool is_homed = all_axes_trusted(),
-             is_valid = leveling_is_valid();
+  //const bool is_homed = all_axes_trusted();
+             //is_valid = leveling_is_valid();
 
   START_MENU();
-  BACK_ITEM(MSG_MOTION);
+  BACK_ITEM(MSG_MAIN);
 
   // Auto Home if not using manual probing
-  #if NONE(PROBE_MANUALLY, MESH_BED_LEVELING)
-    if (!is_homed) GCODES_ITEM(MSG_AUTO_HOME, G28_STR);
-  #endif
-
-  // Level Bed
-  #if EITHER(PROBE_MANUALLY, MESH_BED_LEVELING)
-    // Manual leveling uses a guided procedure
-    SUBMENU(MSG_LEVEL_BED, _lcd_level_bed_continue);
+  #if ENABLED(INDIVIDUAL_AXIS_HOMING_SUBMENU)
+    SUBMENU(MSG_HOMING, menu_home);
   #else
-    // Automatic leveling can just run the G-code
-    GCODES_ITEM(MSG_LEVEL_BED, is_homed ? PSTR("G29") : PSTR("G29N"));
-  #endif
-
-  #if ENABLED(MESH_EDIT_MENU)
-    if (is_valid) SUBMENU(MSG_EDIT_MESH, menu_edit_mesh);
-  #endif
-
-  // Homed and leveling is valid? Then leveling can be toggled.
-  if (is_homed && is_valid) {
-    bool show_state = planner.leveling_active;
-    EDIT_ITEM(bool, MSG_BED_LEVELING, &show_state, _lcd_toggle_bed_leveling);
-  }
-
-  // Z Fade Height
-  #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
-    // Shadow for editing the fade height
-    editable.decimal = planner.z_fade_height;
-    EDIT_ITEM_FAST(float3, MSG_Z_FADE_HEIGHT, &editable.decimal, 0, 100, []{ set_z_fade_height(editable.decimal); });
+    //GCODES_ITEM(MSG_AUTO_HOME, PSTR("G28\nG1 F240 Z0"));
+    ACTION_ITEM(MSG_AUTO_HOME, lcd_G28);
+    #if ENABLED(INDIVIDUAL_AXIS_HOMING_MENU)
+      GCODES_ITEM(MSG_AUTO_HOME_X, PSTR("G28X"));
+      #if HAS_Y_AXIS
+        GCODES_ITEM(MSG_AUTO_HOME_Y, PSTR("G28Y"));
+      #endif
+      #if HAS_Z_AXIS
+        GCODES_ITEM(MSG_AUTO_HOME_Z, PSTR("G28Z"));
+      #endif
+      #if LINEAR_AXES >= 4
+        GCODES_ITEM(MSG_AUTO_HOME_I, PSTR("G28" AXIS4_STR));
+      #endif
+      #if LINEAR_AXES >= 5
+        GCODES_ITEM(MSG_AUTO_HOME_J, PSTR("G28" AXIS5_STR));
+      #endif
+      #if LINEAR_AXES >= 6
+        GCODES_ITEM(MSG_AUTO_HOME_K, PSTR("G28" AXIS6_STR));
+      #endif
+    #endif
   #endif
 
   //
@@ -290,6 +333,44 @@ void menu_bed_leveling() {
     SUBMENU(MSG_ZPROBE_ZOFFSET, lcd_babystep_zoffset);
   #elif HAS_BED_PROBE
     EDIT_ITEM(LCD_Z_OFFSET_TYPE, MSG_ZPROBE_ZOFFSET, &probe.offset.z, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX);
+  #endif
+
+  // Level Bed
+  #if EITHER(PROBE_MANUALLY, MESH_BED_LEVELING)
+    // Manual leveling uses a guided procedure
+    SUBMENU(MSG_LEVEL_BED, _lcd_level_bed_continue);
+  #else
+    // Automatic leveling can just run the G-code
+    //GCODES_ITEM(MSG_LEVEL_BED, is_homed ? PSTR("G29") : PSTR("G29N"));
+    ACTION_ITEM(MSG_LEVEL_BED, lcd_G29);
+  #endif
+ 
+  #if ENABLED(MESH_EDIT_MENU)
+    if (is_valid) SUBMENU(MSG_EDIT_MESH, menu_edit_mesh);
+  #endif
+
+  // Homed and leveling is valid? Then leveling can be toggled.
+  // if (is_homed && is_valid) {
+  //   bool show_state = planner.leveling_active;
+  //   EDIT_ITEM(bool, MSG_BED_LEVELING, &show_state, _lcd_toggle_bed_leveling);
+  // }
+
+  //
+  // Auto Z-Align
+  //
+  #if EITHER(Z_STEPPER_AUTO_ALIGN, MECHANICAL_GANTRY_CALIBRATION)
+    GCODES_ITEM(MSG_AUTO_Z_ALIGN, PSTR("G34"));
+  #endif
+
+  #if ENABLED(Z_MIN_PROBE_REPEATABILITY_TEST)
+    GCODES_ITEM(MSG_M48_TEST, PSTR("G28O\nM48 P10"));
+  #endif
+
+  // Z Fade Height
+  #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
+    // Shadow for editing the fade height
+    editable.decimal = planner.z_fade_height;
+    EDIT_ITEM_FAST(float3, MSG_Z_FADE_HEIGHT, &editable.decimal, 0, 100, []{ set_z_fade_height(editable.decimal); });
   #endif
 
   #if ENABLED(LEVEL_BED_CORNERS)

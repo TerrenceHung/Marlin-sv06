@@ -126,7 +126,7 @@ void menu_tune() {
   // Nozzle [1-4]:
   //
   #if HOTENDS == 1
-    EDIT_ITEM_FAST(int3, MSG_NOZZLE, &thermalManager.temp_hotend[0].target, 0, thermalManager.hotend_max_target(0), []{ thermalManager.start_watching_hotend(0); });
+    EDIT_ITEM_FAST(int3, MSG_NOZZLE, &thermalManager.temp_hotend[0].target, EXTRUDE_MINTEMP, thermalManager.hotend_max_target(0), []{ thermalManager.start_watching_hotend(0); });
   #elif HAS_MULTI_HOTEND
     HOTEND_LOOP()
       EDIT_ITEM_FAST_N(int3, e, MSG_NOZZLE_N, &thermalManager.temp_hotend[e].target, 0, thermalManager.hotend_max_target(e), []{ thermalManager.start_watching_hotend(MenuItemBase::itemIndex); });
@@ -228,10 +228,14 @@ void menu_tune() {
     #endif
     #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
       SUBMENU(MSG_ZPROBE_ZOFFSET, lcd_babystep_zoffset);
+      #if ENABLED(EEPROM_SETTINGS)
+        ACTION_ITEM(MSG_STORE_EEPROM, ui.store_settings);
+      #endif
     #else
       SUBMENU(MSG_BABYSTEP_Z, lcd_babystep_z);
     #endif
   #endif
+
 
   END_MENU();
 }

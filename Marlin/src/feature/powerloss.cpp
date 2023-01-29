@@ -30,6 +30,7 @@
 
 #include "powerloss.h"
 #include "../core/macros.h"
+#include "../module/stepper.h"
 
 bool PrintJobRecovery::enabled; // Initialized by settings.load()
 
@@ -38,7 +39,9 @@ job_recovery_info_t PrintJobRecovery::info;
 const char PrintJobRecovery::filename[5] = "/PLR";
 uint8_t PrintJobRecovery::queue_index_r;
 uint32_t PrintJobRecovery::cmd_sdpos, // = 0
-         PrintJobRecovery::sdpos[BUFSIZE];
+         PrintJobRecovery::sdpos[BUFSIZE]; 
+int16_t PrintJobRecovery::DegTargetHotend;
+int16_t PrintJobRecovery::DegTargetBed;
 
 #if HAS_DWIN_E3V2_BASIC
   bool PrintJobRecovery::dwin_flag; // = false
@@ -180,6 +183,7 @@ void PrintJobRecovery::save(const bool force/*=false*/, const float zraise/*=POW
     // Machine state
     info.current_position = current_position;
     info.feedrate = uint16_t(MMS_TO_MMM(feedrate_mm_s));
+    info.feedrate_percentage = feedrate_percentage;
     info.zraise = zraise;
     info.flag.raised = raised;                      // Was Z raised before power-off?
 
@@ -198,10 +202,10 @@ void PrintJobRecovery::save(const bool force/*=false*/, const float zraise/*=POW
     #endif
 
     #if HAS_EXTRUDERS
-      HOTEND_LOOP() info.target_temperature[e] = thermalManager.degTargetHotend(e);
+      HOTEND_LOOP() info.target_temperature[e] = recovery.DegTargetHotend;
     #endif
 
-    TERN_(HAS_HEATED_BED, info.target_temperature_bed = thermalManager.degTargetBed());
+    TERN_(HAS_HEATED_BED, info.target_temperature_bed = recovery.DegTargetBed);
 
     #if HAS_FAN
       COPY(info.fan_speed, thermalManager.fan_speed);
@@ -286,13 +290,13 @@ void PrintJobRecovery::save(const bool force/*=false*/, const float zraise/*=POW
     #else
       constexpr float zraise = 0;
     #endif
-
+    DegTargetHotend = thermalManager.degTargetHotend(0);
+    DegTargetBed = thermalManager.degTargetBed();
+    thermalManager.disable_all_heaters();
+    stepper.disable_all_steppers();
     // Save the current position, distance that Z was (or should be) raised,
     // and a flag whether the raise was already done here.
     if (IS_SD_PRINTING()) save(true, zraise, ENABLED(BACKUP_POWER_SUPPLY));
-
-    // Disable all heaters to reduce power loss
-    thermalManager.disable_all_heaters();
 
     #if ENABLED(BACKUP_POWER_SUPPLY)
       // Do a hard-stop of the steppers (with possibly a loud thud)
@@ -424,20 +428,13 @@ void PrintJobRecovery::resume() {
   // Mark all axes as having been homed (no effect on current_position)
   set_all_homed();
 
-  #if HAS_LEVELING
-    // Restore Z fade and possibly re-enable bed leveling compensation.
-    // Leveling may already be enabled due to the ENABLE_LEVELING_AFTER_G28 option.
-    // TODO: Add a G28 parameter to leave leveling disabled.
-    sprintf_P(cmd, PSTR("M420S%cZ%s"), '0' + (char)info.flag.leveling, dtostrf(info.fade, 1, 1, str_1));
-    gcode.process_subcommands_now(cmd);
-
+#if HAS_LEVELING
     #if HOME_XY_ONLY
       // The physical Z was adjusted at power-off so undo the M420S1 correction to Z with G92.9.
       sprintf_P(cmd, PSTR("G92.9Z%s"), dtostrf(z_now, 1, 1, str_1));
       gcode.process_subcommands_now(cmd);
     #endif
   #endif
-
   #if ENABLED(POWER_LOSS_RECOVER_ZHOME)
     // Z was homed down to the bed, so move up to the raised height.
     z_now = z_raised;
@@ -537,9 +534,19 @@ void PrintJobRecovery::resume() {
   sprintf_P(cmd, PSTR("G1Z%sF600"), dtostrf(z_print, 1, 3, str_1));
   gcode.process_subcommands_now(cmd);
 
+  #if HAS_LEVELING
+    // Restore Z fade and possibly re-enable bed leveling compensation.
+    // Leveling may already be enabled due to the ENABLE_LEVELING_AFTER_G28 option.
+    // TODO: Add a G28 parameter to leave leveling disabled.
+    sprintf_P(cmd, PSTR("M420S%cZ%s"), '0' + (char)info.flag.leveling, dtostrf(info.fade, 1, 1, str_1));
+    gcode.process_subcommands_now(cmd);
+  #endif
+
   // Restore the feedrate
   sprintf_P(cmd, PSTR("G1F%d"), info.feedrate);
   gcode.process_subcommands_now(cmd);
+
+  feedrate_percentage = info.feedrate_percentage;
 
   // Restore E position with G92.9
   sprintf_P(cmd, PSTR("G92.9E%s"), dtostrf(info.current_position.e, 1, 3, str_1));

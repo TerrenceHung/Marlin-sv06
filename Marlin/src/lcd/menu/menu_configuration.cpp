@@ -28,6 +28,8 @@
 
 #if HAS_LCD_MENU
 
+//#include "../../module/temperature.h"
+
 #include "menu_item.h"
 
 #if HAS_FILAMENT_SENSOR
@@ -310,34 +312,7 @@ void menu_advanced_settings();
 
 #endif
 
-#if PREHEAT_COUNT && DISABLED(SLIM_LCD_MENUS)
 
-  void _menu_configuration_preheat_settings() {
-    #define _MINTEMP_ITEM(N) HEATER_##N##_MINTEMP,
-    #define _MAXTEMP_ITEM(N) HEATER_##N##_MAXTEMP,
-    #define MINTEMP_ALL _MIN(REPEAT(HOTENDS, _MINTEMP_ITEM) 999)
-    #define MAXTEMP_ALL _MAX(REPEAT(HOTENDS, _MAXTEMP_ITEM) 0)
-    const uint8_t m = MenuItemBase::itemIndex;
-    START_MENU();
-    STATIC_ITEM_P(ui.get_preheat_label(m), SS_DEFAULT|SS_INVERT);
-    BACK_ITEM(MSG_CONFIGURATION);
-    #if HAS_FAN
-      editable.uint8 = uint8_t(ui.material_preset[m].fan_speed);
-      EDIT_ITEM_N(percent, m, MSG_FAN_SPEED, &editable.uint8, 0, 255, []{ ui.material_preset[MenuItemBase::itemIndex].fan_speed = editable.uint8; });
-    #endif
-    #if HAS_TEMP_HOTEND
-      EDIT_ITEM(int3, MSG_NOZZLE, &ui.material_preset[m].hotend_temp, MINTEMP_ALL, MAXTEMP_ALL - (HOTEND_OVERSHOOT));
-    #endif
-    #if HAS_HEATED_BED
-      EDIT_ITEM(int3, MSG_BED, &ui.material_preset[m].bed_temp, BED_MINTEMP, BED_MAX_TARGET);
-    #endif
-    #if ENABLED(EEPROM_SETTINGS)
-      ACTION_ITEM(MSG_STORE_EEPROM, ui.store_settings);
-    #endif
-    END_MENU();
-  }
-
-#endif
 
 #if ENABLED(CUSTOM_MENU_CONFIG)
 
@@ -458,8 +433,11 @@ void menu_advanced_settings();
 
 #endif // CUSTOM_MENU_CONFIG
 
+void menu_temperature();
+
 void menu_configuration() {
   const bool busy = printer_busy();
+  
 
   START_MENU();
   BACK_ITEM(MSG_MAIN);
@@ -483,11 +461,11 @@ void menu_configuration() {
 
   SUBMENU(MSG_ADVANCED_SETTINGS, menu_advanced_settings);
 
-  #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
-    SUBMENU(MSG_ZPROBE_ZOFFSET, lcd_babystep_zoffset);
-  #elif HAS_BED_PROBE
-    EDIT_ITEM(LCD_Z_OFFSET_TYPE, MSG_ZPROBE_ZOFFSET, &probe.offset.z, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX);
-  #endif
+  // #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
+  //   SUBMENU(MSG_ZPROBE_ZOFFSET, lcd_babystep_zoffset);
+  // #elif HAS_BED_PROBE
+  //   EDIT_ITEM(LCD_Z_OFFSET_TYPE, MSG_ZPROBE_ZOFFSET, &probe.offset.z, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX);
+  // #endif
 
   //
   // Set Fan Controller speed
@@ -542,23 +520,19 @@ void menu_configuration() {
     EDIT_ITEM(bool, MSG_RUNOUT_SENSOR, &runout.enabled, runout.reset);
   #endif
 
-  #if ENABLED(POWER_LOSS_RECOVERY)
-    EDIT_ITEM(bool, MSG_OUTAGE_RECOVERY, &recovery.enabled, recovery.changed);
-  #endif
+  //#if ENABLED(POWER_LOSS_RECOVERY)
+  //  EDIT_ITEM(bool, MSG_OUTAGE_RECOVERY, &recovery.enabled, recovery.changed);
+  //#endif
 
-  // Preheat configurations
-  #if PREHEAT_COUNT && DISABLED(SLIM_LCD_MENUS)
-    LOOP_L_N(m, PREHEAT_COUNT)
-      SUBMENU_N_S(m, ui.get_preheat_label(m), MSG_PREHEAT_M_SETTINGS, _menu_configuration_preheat_settings);
-  #endif
+ 
 
   #if ENABLED(SOUND_MENU_ITEM)
     EDIT_ITEM(bool, MSG_SOUND, &ui.buzzer_enabled, []{ ui.chirp(); });
   #endif
 
   #if ENABLED(EEPROM_SETTINGS)
-    ACTION_ITEM(MSG_STORE_EEPROM, ui.store_settings);
-    if (!busy) ACTION_ITEM(MSG_LOAD_EEPROM, ui.load_settings);
+    //ACTION_ITEM(MSG_STORE_EEPROM, ui.store_settings);
+    //if (!busy) ACTION_ITEM(MSG_LOAD_EEPROM, ui.load_settings);
   #endif
 
   if (!busy) ACTION_ITEM(MSG_RESTORE_DEFAULTS, ui.reset_settings);

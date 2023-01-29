@@ -39,6 +39,11 @@
   #include "../../feature/power.h"
 #endif
 
+#if HAS_LEVELING
+  #include "../../module/planner.h"
+  #include "../../feature/bedlevel/bedlevel.h"
+#endif
+
 #if HAS_GAMES && DISABLED(LCD_INFO_MENU)
   #include "game/game.h"
 #endif
@@ -69,8 +74,11 @@
 void menu_tune();
 void menu_cancelobject();
 void menu_motion();
-void menu_temperature();
 void menu_configuration();
+
+#if ENABLED(LCD_BED_LEVELING)
+  void menu_bed_leveling();
+#endif
 
 #if HAS_POWER_MONITOR
   void menu_power_monitor();
@@ -248,7 +256,7 @@ void menu_main() {
       if (card_detected) {
         if (!card_open) {
           #if PIN_EXISTS(SD_DETECT)
-            GCODES_ITEM(MSG_CHANGE_MEDIA, PSTR("M21"));       // M21 Change Media
+            //GCODES_ITEM(MSG_CHANGE_MEDIA, PSTR("M21"));       // M21 Change Media
           #else                                               // - or -
             GCODES_ITEM(MSG_RELEASE_MEDIA, PSTR("M22"));      // M22 Release Media
           #endif
@@ -308,16 +316,50 @@ void menu_main() {
       SUBMENU(MSG_PREHEAT_CUSTOM, menu_preheat_only);
     #endif
 
-    SUBMENU(MSG_MOTION, menu_motion);
+    SUBMENU(MSG_PREPARE, menu_motion);
+
+    //
+    // Level Bed
+    //
+    #if ENABLED(AUTO_BED_LEVELING_UBL)
+
+      SUBMENU(MSG_UBL_LEVEL_BED, _lcd_ubl_level_bed);
+
+    #elif ENABLED(LCD_BED_LEVELING)
+
+      if (!g29_in_progress)
+        SUBMENU(MSG_BED_LEVELING, menu_bed_leveling);
+
+    #elif HAS_LEVELING && DISABLED(SLIM_LCD_MENUS)
+
+      #if DISABLED(PROBE_MANUALLY)
+        GCODES_ITEM(MSG_LEVEL_BED, PSTR("G29N"));
+      #endif
+
+      if (all_axes_homed() && leveling_is_valid()) {
+        bool show_state = planner.leveling_active;
+        EDIT_ITEM(bool, MSG_BED_LEVELING, &show_state, _lcd_toggle_bed_leveling);
+      }
+
+      #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
+        editable.decimal = planner.z_fade_height;
+        EDIT_ITEM_FAST(float3, MSG_Z_FADE_HEIGHT, &editable.decimal, 0, 100, []{ set_z_fade_height(editable.decimal); });
+      #endif
+
+  #endif
   }
 
+  #if ENABLED(SDSUPPORT) && DISABLED(MEDIA_MENU_AT_TOP)
+    sdcard_menu_items();
+  #endif
+  
   #if HAS_CUTTER
     SUBMENU(MSG_CUTTER(MENU), STICKY_SCREEN(menu_spindle_laser));
   #endif
 
-  #if HAS_TEMPERATURE
+  /*#if HAS_TEMPERATURE
     SUBMENU(MSG_TEMPERATURE, menu_temperature);
-  #endif
+  #endif*/
 
   #if HAS_POWER_MONITOR
     SUBMENU(MSG_POWER_MONITOR, menu_power_monitor);
@@ -380,9 +422,6 @@ void menu_main() {
       GCODES_ITEM(MSG_SWITCH_PS_ON, PSTR("M80"));
   #endif
 
-  #if ENABLED(SDSUPPORT) && DISABLED(MEDIA_MENU_AT_TOP)
-    sdcard_menu_items();
-  #endif
 
   #if HAS_SERVICE_INTERVALS
     static auto _service_reset = [](const int index) {

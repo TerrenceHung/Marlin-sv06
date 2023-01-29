@@ -288,6 +288,11 @@ namespace Language_en {
   LSTR MSG_MOVE_E                         = _UxGT("Move Extruder");
   LSTR MSG_MOVE_EN                        = _UxGT("Move E*");
   LSTR MSG_HOTEND_TOO_COLD                = _UxGT("Hotend too cold");
+  LSTR MSG_HOTEND_TOO_COLD_Heating        = _UxGT("Hotend too cold.  Whether to heat the nozzle");
+  LSTR MSG_LEVEL_HINT                     = _UxGT("Leveling Requires machine heat up automatically");
+  LSTR MSG_LEVEL_STATE                    = _UxGT("wait for Leveling...");
+  LSTR MSG_HOME_HINT                      = _UxGT("Homing Requires machine heat up automatically");
+  LSTR MSG_HOME_STATE                     = _UxGT("wait for Homing...");
   LSTR MSG_MOVE_N_MM                      = _UxGT("Move %smm");
   LSTR MSG_MOVE_01MM                      = _UxGT("Move 0.1mm");
   LSTR MSG_MOVE_1MM                       = _UxGT("Move 1mm");
@@ -386,6 +391,7 @@ namespace Language_en {
   LSTR MSG_E_STEPS                        = _UxGT("E steps/mm");
   LSTR MSG_EN_STEPS                       = _UxGT("* Steps/mm");
   LSTR MSG_TEMPERATURE                    = _UxGT("Temperature");
+  LSTR MSD_PID_SETTING                    = _UxGT("PID_Setting");
   LSTR MSG_MOTION                         = _UxGT("Motion");
   LSTR MSG_FILAMENT                       = _UxGT("Filament");
   LSTR MSG_VOLUMETRIC_ENABLED             = _UxGT("E in mm") SUPERSCRIPT_THREE;
@@ -488,7 +494,7 @@ namespace Language_en {
   LSTR MSG_RELEASE_MEDIA                  = _UxGT("Release ") MEDIA_TYPE_EN;
   LSTR MSG_ZPROBE_OUT                     = _UxGT("Z Probe Past Bed");
   LSTR MSG_SKEW_FACTOR                    = _UxGT("Skew Factor");
-  LSTR MSG_BLTOUCH                        = _UxGT("BLTouch");
+  LSTR MSG_BLTOUCH                        = _UxGT("CRTouch");
   LSTR MSG_BLTOUCH_SELFTEST               = _UxGT("Self-Test");
   LSTR MSG_BLTOUCH_RESET                  = _UxGT("Reset");
   LSTR MSG_BLTOUCH_STOW                   = _UxGT("Stow");

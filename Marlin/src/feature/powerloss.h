@@ -56,6 +56,7 @@ typedef struct {
   // Machine state
   xyze_pos_t current_position;
   uint16_t feedrate;
+  int16_t feedrate_percentage;
 
   float zraise;
 
@@ -144,6 +145,9 @@ class PrintJobRecovery {
     static uint8_t queue_index_r;     //!< Queue index of the active command
     static uint32_t cmd_sdpos,        //!< SD position of the next command
                     sdpos[BUFSIZE];   //!< SD positions of queued commands
+
+    static int16_t DegTargetHotend;
+    static int16_t DegTargetBed;
 
     #if HAS_DWIN_E3V2_BASIC
       static bool dwin_flag;
