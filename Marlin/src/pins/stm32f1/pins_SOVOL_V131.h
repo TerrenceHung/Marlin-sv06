@@ -21,21 +21,18 @@
  */
 #pragma once
 
-/**
- * Creality 4.2.x (STM32F103RET6) board pin assignments
- */
 
 #include "env_validate.h"
 
 #if HOTENDS > 1 || E_STEPPERS > 1
-  #error "Creality V4 only supports one hotend / E-stepper. Comment out this line to continue."
+  #error "SOVOL V131 only supports one hotend / E-stepper. Comment out this line to continue."
 #endif
 
 #ifndef BOARD_INFO_NAME
-  #define BOARD_INFO_NAME      "Creality V4"
+  #define BOARD_INFO_NAME      "Sovol V131"
 #endif
 #ifndef DEFAULT_MACHINE_NAME
-  #define DEFAULT_MACHINE_NAME "Ender 3 V2"
+  #define DEFAULT_MACHINE_NAME "Sovol SV06"
 #endif
 
 //#define BOARD_NO_NATIVE_USB
@@ -194,41 +191,6 @@
     #ifndef HAS_PIN_27_BOARD
       #define BEEPER_PIN                    PC6
     #endif
-
-  #elif ENABLED(VET6_12864_LCD)
-
-    // VET6 12864 LCD
-    #define LCD_PINS_RS                     PA4
-    #define LCD_PINS_ENABLE                 PA7
-    #define LCD_PINS_D4                     PA5
-
-    #define BTN_ENC                         PC5
-    #define BTN_EN1                         PB10
-    #define BTN_EN2                         PA6
-
-  #else
-    #error "Define RET6_12864_LCD or VET6_12864_LCD to select pins for CR10_STOCKDISPLAY with the Creality V4 controller."
   #endif
-
-#elif EITHER(HAS_DWIN_E3V2, IS_DWIN_MARLINUI)
-
-  // RET6 DWIN ENCODER LCD
-  #define BTN_ENC                           PB14
-  #define BTN_EN1                           PB15
-  #define BTN_EN2                           PB12
-
-  //#define LCD_LED_PIN                     PB2
-  #ifndef BEEPER_PIN
-    #define BEEPER_PIN                      PB13
-  #endif
-
-#elif ENABLED(DWIN_VET6_CREALITY_LCD)
-
-  // VET6 DWIN ENCODER LCD
-  #define BTN_ENC                           PA6
-  #define BTN_EN1                           PA7
-  #define BTN_EN2                           PA4
-
-  #define BEEPER_PIN                        PA5
-
+  
 #endif
